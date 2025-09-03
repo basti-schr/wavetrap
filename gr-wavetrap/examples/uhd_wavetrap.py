@@ -7,56 +7,44 @@
 # GNU Radio Python Flow Graph
 # Title: WAVETRAP PUSH-BUTTON RF RECORDER
 # Author: Muad'Dib
-# GNU Radio version: 3.10.2.0-rc1
-
-from packaging.version import Version as StrictVersion
-
-if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print("Warning: failed to XInitThreads()")
+# GNU Radio version: 3.10.11.0
 
 from PyQt5 import Qt
-from gnuradio import eng_notation
 from gnuradio import qtgui
-import sip
-from gnuradio import fosphor
-from gnuradio.fft import window
+from PyQt5 import QtCore
 from datetime import datetime
 from gnuradio import blocks
+from gnuradio import eng_notation
 from gnuradio import gr
 from gnuradio.filter import firdes
+from gnuradio.fft import window
 import sys
 import signal
+from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import uhd
 import time
-from gnuradio import zeromq
-from gnuradio.qtgui import Range, RangeWidget
-from PyQt5 import QtCore
+from gnuradio import wavetrap
+import gnuradio.wavetrap as wavetrap
 import os
+import sip
+import threading
+import uhd_wavetrap_epy_block_0 as epy_block_0  # embedded python block
 
 
-
-from gnuradio import qtgui
 
 class uhd_wavetrap(gr.top_block, Qt.QWidget):
 
-    def __init__(self, rf_bw=20e6, rf_freq=1534e6, rf_gain=40.0, samp_rate=2e6):
+    def __init__(self, rf_freq=1534e6, rf_gain=70, samp_rate=4e6):
         gr.top_block.__init__(self, "WAVETRAP PUSH-BUTTON RF RECORDER", catch_exceptions=True)
         Qt.QWidget.__init__(self)
         self.setWindowTitle("WAVETRAP PUSH-BUTTON RF RECORDER")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
-        except:
-            pass
+        except BaseException as exc:
+            print(f"Qt GUI: Could not set Icon: {str(exc)}", file=sys.stderr)
         self.top_scroll_layout = Qt.QVBoxLayout()
         self.setLayout(self.top_scroll_layout)
         self.top_scroll = Qt.QScrollArea()
@@ -69,20 +57,19 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
 
-        self.settings = Qt.QSettings("GNU Radio", "uhd_wavetrap")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "uhd_wavetrap")
 
         try:
-            if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-                self.restoreGeometry(self.settings.value("geometry").toByteArray())
-            else:
-                self.restoreGeometry(self.settings.value("geometry"))
-        except:
-            pass
+            geometry = self.settings.value("geometry")
+            if geometry:
+                self.restoreGeometry(geometry)
+        except BaseException as exc:
+            print(f"Qt GUI: Could not restore geometry: {str(exc)}", file=sys.stderr)
+        self.flowgraph_started = threading.Event()
 
         ##################################################
         # Parameters
         ##################################################
-        self.rf_bw = rf_bw
         self.rf_freq = rf_freq
         self.rf_gain = rf_gain
         self.samp_rate = samp_rate
@@ -90,64 +77,71 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.rootdir = rootdir = str(os.path.expanduser("~")+"/")
+        self.rootdir = rootdir = "/media/sebastian/GNNS-R/"
         self.record_file_path = record_file_path = "data/"
         self.note = note = 'RECORDING_NOTE'
         self.gui_samp_rate = gui_samp_rate = samp_rate
         self.gui_gain = gui_gain = rf_gain
-        self.freq = freq = rf_freq
+        self.freq = freq = 1575.42e6
+        self.duration = duration = 1
         self.timestamp = timestamp = datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S')
-        self.str_freq = str_freq = str(freq)
+        self.samples = samples = int(duration * gui_samp_rate)
         self.rec_button = rec_button = 0
-        self.gui_bandwidth = gui_bandwidth = rf_bw
         self.filename = filename = rootdir+record_file_path+note+"_"+str(int(freq))+"Hz_"+str(int(gui_samp_rate))+"sps_"+str(gui_gain)+"dB_"
 
         ##################################################
         # Blocks
         ##################################################
+
         self.tabs = Qt.QTabWidget()
         self.tabs_widget_0 = Qt.QWidget()
         self.tabs_layout_0 = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom, self.tabs_widget_0)
         self.tabs_grid_layout_0 = Qt.QGridLayout()
         self.tabs_layout_0.addLayout(self.tabs_grid_layout_0)
-        self.tabs.addTab(self.tabs_widget_0, 'Tab 0')
+        self.tabs.addTab(self.tabs_widget_0, 'RF Settings')
         self.top_grid_layout.addWidget(self.tabs, 0, 0, 7, 4)
         for r in range(0, 7):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 4):
             self.top_grid_layout.setColumnStretch(c, 1)
-        _rec_button_push_button = Qt.QPushButton('RECORD')
-        _rec_button_push_button = Qt.QPushButton('RECORD')
-        self._rec_button_choices = {'Pressed': 1, 'Released': 0}
-        _rec_button_push_button.pressed.connect(lambda: self.set_rec_button(self._rec_button_choices['Pressed']))
-        _rec_button_push_button.released.connect(lambda: self.set_rec_button(self._rec_button_choices['Released']))
-        self.tabs_grid_layout_0.addWidget(_rec_button_push_button, 1, 3, 1, 1)
+        if bool == bool:
+        	self._rec_button_choices = {'Pressed': bool(1), 'Released': bool(0)}
+        elif bool == str:
+        	self._rec_button_choices = {'Pressed': "1".replace("'",""), 'Released': "0".replace("'","")}
+        else:
+        	self._rec_button_choices = {'Pressed': 1, 'Released': 0}
+
+        _rec_button_ctl_toggle_btn = wavetrap.CtlToggleButton(self.set_rec_button, 'rec_button', self._rec_button_choices, False,"'value'".replace("'",""))
+        _rec_button_ctl_toggle_btn.setColors("default","default","default","default")
+        self.rec_button = _rec_button_ctl_toggle_btn
+
+        self.tabs_grid_layout_0.addWidget(_rec_button_ctl_toggle_btn, 1, 3, 1, 1)
         for r in range(1, 2):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(3, 4):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self._gui_samp_rate_range = Range(200e3, 56e6, 1e6, samp_rate, 200)
-        self._gui_samp_rate_win = RangeWidget(self._gui_samp_rate_range, self.set_gui_samp_rate, "sample_rate", "counter_slider", float, QtCore.Qt.Horizontal)
+        self._gui_samp_rate_range = qtgui.Range(200e3, 56e6, 1e6, samp_rate, 10)
+        self._gui_samp_rate_win = qtgui.RangeWidget(self._gui_samp_rate_range, self.set_gui_samp_rate, "Sample Rate", "eng", float, QtCore.Qt.Horizontal)
         self.tabs_grid_layout_0.addWidget(self._gui_samp_rate_win, 0, 1, 1, 1)
         for r in range(0, 1):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(1, 2):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self._gui_gain_range = Range(0, 89.0, 1, rf_gain, 200)
-        self._gui_gain_win = RangeWidget(self._gui_gain_range, self.set_gui_gain, "RX Gain", "counter_slider", float, QtCore.Qt.Horizontal)
+        self._gui_gain_range = qtgui.Range(0, 76, 1, rf_gain, 200)
+        self._gui_gain_win = qtgui.RangeWidget(self._gui_gain_range, self.set_gui_gain, "RX Gain", "counter_slider", float, QtCore.Qt.Horizontal)
         self.tabs_grid_layout_0.addWidget(self._gui_gain_win, 0, 0, 1, 1)
         for r in range(0, 1):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(0, 1):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self._gui_bandwidth_range = Range(200e3, 56e6, 1e6, rf_bw, 200)
-        self._gui_bandwidth_win = RangeWidget(self._gui_bandwidth_range, self.set_gui_bandwidth, "Bandwidth", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.tabs_grid_layout_0.addWidget(self._gui_bandwidth_win, 0, 2, 1, 1)
+        self._freq_range = qtgui.Range(50e6, 6e9, 10e3, 1575.42e6, 200)
+        self._freq_win = qtgui.RangeWidget(self._freq_range, self.set_freq, "Center Frequency", "eng_slider", float, QtCore.Qt.Horizontal)
+        self.tabs_grid_layout_0.addWidget(self._freq_win, 0, 2, 1, 1)
         for r in range(0, 1):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(2, 3):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self.zeromq_pub_sink_0 = zeromq.pub_sink(gr.sizeof_gr_complex, 1, 'tcp://127.0.0.1:5000', 100, True, -1, '')
+        self.wavetrap_head_w_rst_0 = wavetrap.head_w_rst(gr.sizeof_gr_complex*1, samples)
         self.uhd_usrp_source_0 = uhd.usrp_source(
             ",".join(("", '')),
             uhd.stream_args(
@@ -162,80 +156,84 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
 
         self.uhd_usrp_source_0.set_center_freq(freq, 0)
         self.uhd_usrp_source_0.set_antenna("RX2", 0)
-        self.uhd_usrp_source_0.set_bandwidth(gui_bandwidth, 0)
+        self.uhd_usrp_source_0.set_bandwidth(gui_samp_rate, 0)
         self.uhd_usrp_source_0.set_rx_agc(False, 0)
         self.uhd_usrp_source_0.set_gain(gui_gain, 0)
-        self.qtgui_ledindicator_0 = self._qtgui_ledindicator_0_win = qtgui.GrLEDIndicator("RED=RECORDING", "red", "green", True if rec_button == 1 else False, 40, 2, 1, 1, self)
+        self.qtgui_sink_x_0 = qtgui.sink_c(
+            2048, #fftsize
+            window.WIN_BLACKMAN_hARRIS, #wintype
+            freq, #fc
+            gui_samp_rate, #bw
+            "", #name
+            True, #plotfreq
+            True, #plotwaterfall
+            True, #plottime
+            False, #plotconst
+            None # parent
+        )
+        self.qtgui_sink_x_0.set_update_time(1.0/20)
+        self._qtgui_sink_x_0_win = sip.wrapinstance(self.qtgui_sink_x_0.qwidget(), Qt.QWidget)
+
+        self.qtgui_sink_x_0.enable_rf_freq(True)
+
+        self.top_layout.addWidget(self._qtgui_sink_x_0_win)
+        self.qtgui_ledindicator_0 = self._qtgui_ledindicator_0_win = qtgui.GrLEDIndicator("RED=RECORDING", "red", "green", False, 40, 2, 1, 1, self)
         self.qtgui_ledindicator_0 = self._qtgui_ledindicator_0_win
         self.tabs_grid_layout_0.addWidget(self._qtgui_ledindicator_0_win, 0, 3, 1, 1)
         for r in range(0, 1):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(3, 4):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self.qtgui_edit_box_msg_0_0 = qtgui.edit_box_msg(qtgui.FLOAT, str_freq, 'Msg-based input', True, True, 'freq', None)
-        self._qtgui_edit_box_msg_0_0_win = sip.wrapinstance(self.qtgui_edit_box_msg_0_0.qwidget(), Qt.QWidget)
-        self.tabs_grid_layout_0.addWidget(self._qtgui_edit_box_msg_0_0_win, 1, 0, 1, 1)
-        for r in range(1, 2):
-            self.tabs_grid_layout_0.setRowStretch(r, 1)
-        for c in range(0, 1):
-            self.tabs_grid_layout_0.setColumnStretch(c, 1)
         self._note_tool_bar = Qt.QToolBar(self)
         self._note_tool_bar.addWidget(Qt.QLabel("RECORDING NOTE (press enter to update)" + ": "))
         self._note_line_edit = Qt.QLineEdit(str(self.note))
         self._note_tool_bar.addWidget(self._note_line_edit)
-        self._note_line_edit.returnPressed.connect(
+        self._note_line_edit.editingFinished.connect(
             lambda: self.set_note(str(str(self._note_line_edit.text()))))
         self.tabs_grid_layout_0.addWidget(self._note_tool_bar, 1, 1, 1, 2)
         for r in range(1, 2):
             self.tabs_grid_layout_0.setRowStretch(r, 1)
         for c in range(1, 3):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self.fosphor_qt_sink_c_0 = fosphor.qt_sink_c()
-        self.fosphor_qt_sink_c_0.set_fft_window(window.WIN_BLACKMAN_hARRIS)
-        self.fosphor_qt_sink_c_0.set_frequency_range(freq, gui_samp_rate)
-        self._fosphor_qt_sink_c_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0.pyqwidget(), Qt.QWidget)
-        self.tabs_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_win, 2, 0, 5, 4)
-        for r in range(2, 7):
-            self.tabs_grid_layout_0.setRowStretch(r, 1)
-        for c in range(0, 4):
-            self.tabs_grid_layout_0.setColumnStretch(c, 1)
-        self.blocks_msgpair_to_var_0 = blocks.msg_pair_to_var(self.set_freq)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".cfile" if rec_button == 1 else "/dev/null", False)
-        self.blocks_file_sink_0.set_unbuffered(False)
+        self.epy_block_0 = epy_block_0.blk()
+        self._duration_tool_bar = Qt.QToolBar(self)
+        self._duration_tool_bar.addWidget(Qt.QLabel("Duration [s]" + ": "))
+        self._duration_line_edit = Qt.QLineEdit(str(self.duration))
+        self._duration_tool_bar.addWidget(self._duration_line_edit)
+        self._duration_line_edit.editingFinished.connect(
+            lambda: self.set_duration(eng_notation.str_to_num(str(self._duration_line_edit.text()))))
+        self.top_layout.addWidget(self._duration_tool_bar)
+        self.blocks_var_to_msg_0 = blocks.var_to_msg_pair('freq')
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".raw" if rec_button == 1 else "/dev/null", False)
+        self.blocks_file_sink_0.set_unbuffered(True)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.msg_connect((self.fosphor_qt_sink_c_0, 'freq'), (self.qtgui_edit_box_msg_0_0, 'val'))
-        self.msg_connect((self.qtgui_edit_box_msg_0_0, 'msg'), (self.blocks_msgpair_to_var_0, 'inpair'))
-        self.msg_connect((self.qtgui_edit_box_msg_0_0, 'msg'), (self.uhd_usrp_source_0, 'command'))
-        self.connect((self.uhd_usrp_source_0, 0), (self.blocks_file_sink_0, 0))
-        self.connect((self.uhd_usrp_source_0, 0), (self.fosphor_qt_sink_c_0, 0))
-        self.connect((self.uhd_usrp_source_0, 0), (self.zeromq_pub_sink_0, 0))
+        self.msg_connect((self.blocks_var_to_msg_0, 'msgout'), (self.qtgui_sink_x_0, 'freq'))
+        self.msg_connect((self.epy_block_0, 'msg_out'), (self.rec_button, 'set_state'))
+        self.msg_connect((self.rec_button, 'state'), (self.qtgui_ledindicator_0, 'state'))
+        self.msg_connect((self.rec_button, 'state'), (self.wavetrap_head_w_rst_0, 'reset'))
+        self.msg_connect((self.wavetrap_head_w_rst_0, 'status'), (self.epy_block_0, 'msg_in'))
+        self.connect((self.uhd_usrp_source_0, 0), (self.qtgui_sink_x_0, 0))
+        self.connect((self.uhd_usrp_source_0, 0), (self.wavetrap_head_w_rst_0, 0))
+        self.connect((self.wavetrap_head_w_rst_0, 0), (self.blocks_file_sink_0, 0))
 
 
     def closeEvent(self, event):
-        self.settings = Qt.QSettings("GNU Radio", "uhd_wavetrap")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "uhd_wavetrap")
         self.settings.setValue("geometry", self.saveGeometry())
         self.stop()
         self.wait()
 
         event.accept()
 
-    def get_rf_bw(self):
-        return self.rf_bw
-
-    def set_rf_bw(self, rf_bw):
-        self.rf_bw = rf_bw
-        self.set_gui_bandwidth(self.rf_bw)
-
     def get_rf_freq(self):
         return self.rf_freq
 
     def set_rf_freq(self, rf_freq):
         self.rf_freq = rf_freq
-        self.set_freq(self.rf_freq)
 
     def get_rf_gain(self):
         return self.rf_gain
@@ -279,8 +277,10 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
     def set_gui_samp_rate(self, gui_samp_rate):
         self.gui_samp_rate = gui_samp_rate
         self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
-        self.fosphor_qt_sink_c_0.set_frequency_range(self.freq, self.gui_samp_rate)
+        self.set_samples(int(self.duration * self.gui_samp_rate))
+        self.qtgui_sink_x_0.set_frequency_range(self.freq, self.gui_samp_rate)
         self.uhd_usrp_source_0.set_samp_rate(self.gui_samp_rate)
+        self.uhd_usrp_source_0.set_bandwidth(self.gui_samp_rate, 0)
 
     def get_gui_gain(self):
         return self.gui_gain
@@ -296,9 +296,17 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
     def set_freq(self, freq):
         self.freq = freq
         self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
-        self.set_str_freq(str(self.freq))
-        self.fosphor_qt_sink_c_0.set_frequency_range(self.freq, self.gui_samp_rate)
+        self.blocks_var_to_msg_0.variable_changed(self.freq)
+        self.qtgui_sink_x_0.set_frequency_range(self.freq, self.gui_samp_rate)
         self.uhd_usrp_source_0.set_center_freq(self.freq, 0)
+
+    def get_duration(self):
+        return self.duration
+
+    def set_duration(self, duration):
+        self.duration = duration
+        Qt.QMetaObject.invokeMethod(self._duration_line_edit, "setText", Qt.Q_ARG("QString", eng_notation.num_to_str(self.duration)))
+        self.set_samples(int(self.duration * self.gui_samp_rate))
 
     def get_timestamp(self):
         return self.timestamp
@@ -306,49 +314,39 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
     def set_timestamp(self, timestamp):
         self.timestamp = timestamp
 
-    def get_str_freq(self):
-        return self.str_freq
+    def get_samples(self):
+        return self.samples
 
-    def set_str_freq(self, str_freq):
-        self.str_freq = str_freq
+    def set_samples(self, samples):
+        self.samples = samples
+        self.wavetrap_head_w_rst_0.set_length(self.samples)
 
     def get_rec_button(self):
         return self.rec_button
 
     def set_rec_button(self, rec_button):
         self.rec_button = rec_button
-        self.blocks_file_sink_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".cfile" if self.rec_button == 1 else "/dev/null")
-        self.qtgui_ledindicator_0.setState(True if self.rec_button == 1 else False)
-
-    def get_gui_bandwidth(self):
-        return self.gui_bandwidth
-
-    def set_gui_bandwidth(self, gui_bandwidth):
-        self.gui_bandwidth = gui_bandwidth
-        self.uhd_usrp_source_0.set_bandwidth(self.gui_bandwidth, 0)
+        self.blocks_file_sink_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".raw" if self.rec_button == 1 else "/dev/null")
 
     def get_filename(self):
         return self.filename
 
     def set_filename(self, filename):
         self.filename = filename
-        self.blocks_file_sink_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".cfile" if self.rec_button == 1 else "/dev/null")
+        self.blocks_file_sink_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".raw" if self.rec_button == 1 else "/dev/null")
 
 
 
 def argument_parser():
     parser = ArgumentParser()
     parser.add_argument(
-        "-b", "--rf-bw", dest="rf_bw", type=eng_float, default=eng_notation.num_to_str(float(20e6)),
-        help="Set RF BANDWITDH [default=%(default)r]")
-    parser.add_argument(
         "-f", "--rf-freq", dest="rf_freq", type=eng_float, default=eng_notation.num_to_str(float(1534e6)),
         help="Set RF FREQUENCY [default=%(default)r]")
     parser.add_argument(
-        "-g", "--rf-gain", dest="rf_gain", type=eng_float, default=eng_notation.num_to_str(float(40.0)),
+        "-g", "--rf-gain", dest="rf_gain", type=eng_float, default=eng_notation.num_to_str(float(70)),
         help="Set RF GAIN [default=%(default)r]")
     parser.add_argument(
-        "-s", "--samp-rate", dest="samp_rate", type=eng_float, default=eng_notation.num_to_str(float(2e6)),
+        "-s", "--samp-rate", dest="samp_rate", type=eng_float, default=eng_notation.num_to_str(float(4e6)),
         help="Set SAMPLE RATE [default=%(default)r]")
     return parser
 
@@ -357,14 +355,12 @@ def main(top_block_cls=uhd_wavetrap, options=None):
     if options is None:
         options = argument_parser().parse_args()
 
-    if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-        style = gr.prefs().get_string('qtgui', 'style', 'raster')
-        Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
-    tb = top_block_cls(rf_bw=options.rf_bw, rf_freq=options.rf_freq, rf_gain=options.rf_gain, samp_rate=options.samp_rate)
+    tb = top_block_cls(rf_freq=options.rf_freq, rf_gain=options.rf_gain, samp_rate=options.samp_rate)
 
     tb.start()
+    tb.flowgraph_started.set()
 
     tb.show()
 

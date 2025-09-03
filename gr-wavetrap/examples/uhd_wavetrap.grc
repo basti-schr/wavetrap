@@ -33,6 +33,22 @@ options:
     state: enabled
 
 blocks:
+- name: duration
+  id: variable_qtgui_entry
+  parameters:
+    comment: ''
+    entry_signal: editingFinished
+    gui_hint: ''
+    label: Duration [s]
+    type: real
+    value: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [480, 8.0]
+    rotation: 0
+    state: enabled
 - name: filename
   id: variable
   parameters:
@@ -43,42 +59,30 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 380.0]
+    coordinate: [1088, 632.0]
     rotation: 0
     state: enabled
 - name: freq
-  id: variable
-  parameters:
-    comment: ''
-    value: rf_freq
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [312, 12.0]
-    rotation: 0
-    state: enabled
-- name: gui_bandwidth
   id: variable_qtgui_range
   parameters:
     comment: ''
     gui_hint: tabs@0:0,2,1,1
-    label: Bandwidth
+    label: Center Frequency
     min_len: '200'
     orient: QtCore.Qt.Horizontal
     rangeType: float
-    start: 200e3
-    step: 1e6
-    stop: 56e6
-    value: rf_bw
-    widget: counter_slider
+    start: 50e6
+    step: 10e3
+    stop: 6e9
+    value: 1575.42e6
+    widget: eng_slider
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [560, 12.0]
+    coordinate: [752, 8.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: gui_gain
   id: variable_qtgui_range
   parameters:
@@ -90,14 +94,14 @@ blocks:
     rangeType: float
     start: '0'
     step: '1'
-    stop: '89.0'
+    stop: '76'
     value: rf_gain
     widget: counter_slider
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [192, 12.0]
+    coordinate: [376, 8.0]
     rotation: 0
     state: true
 - name: gui_samp_rate
@@ -105,26 +109,27 @@ blocks:
   parameters:
     comment: ''
     gui_hint: tabs@0:0,1,1,1
-    label: sample_rate
-    min_len: '200'
+    label: Sample Rate
+    min_len: '10'
     orient: QtCore.Qt.Horizontal
     rangeType: float
     start: 200e3
     step: 1e6
     stop: 56e6
     value: samp_rate
-    widget: counter_slider
+    widget: eng
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [432, 12.0]
+    coordinate: [592, 8.0]
     rotation: 0
     state: enabled
 - name: note
   id: variable_qtgui_entry
   parameters:
     comment: ''
+    entry_signal: editingFinished
     gui_hint: tabs@0:1,1,1,2
     label: RECORDING NOTE (press enter to update)
     type: string
@@ -133,24 +138,34 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [696, 12.0]
+    coordinate: [904, 8.0]
     rotation: 0
     state: enabled
 - name: rec_button
-  id: variable_qtgui_push_button
+  id: wavetrap_CtlToggleButton
   parameters:
+    affinity: ''
+    alias: ''
     comment: ''
     gui_hint: tabs@0:1,3,1,1
-    label: RECORD
+    initPressed: 'False'
+    label: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    outputmsgname: value
+    pressBackgroundColor: default
+    pressFontColor: default
     pressed: '1'
+    relBackgroundColor: default
+    relFontColor: default
     released: '0'
-    type: int
+    type: bool
     value: '0'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [896, 12.0]
+    coordinate: [408, 592.0]
     rotation: 0
     state: enabled
 - name: record_file_path
@@ -162,7 +177,21 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 300.0]
+    coordinate: [1088, 536.0]
+    rotation: 0
+    state: enabled
+- name: rootdir
+  id: variable
+  parameters:
+    comment: 'Add directory in quotes with trailing and leading /:
+
+      like: "/media/user/GNNS-R/"'
+    value: '"/media/sebastian/GNNS-R/"'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1088, 432.0]
     rotation: 0
     state: enabled
 - name: rootdir
@@ -174,19 +203,19 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 220.0]
+    coordinate: [1248, 432.0]
     rotation: 0
-    state: enabled
-- name: str_freq
+    state: disabled
+- name: samples
   id: variable
   parameters:
     comment: ''
-    value: str(freq)
+    value: int(duration * gui_samp_rate)
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [312, 76.0]
+    coordinate: [480, 88.0]
     rotation: 0
     state: enabled
 - name: timestamp
@@ -200,7 +229,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1256, 380.0]
+    coordinate: [1088, 320.0]
     rotation: 0
     state: enabled
 - name: blocks_file_sink_0
@@ -210,30 +239,70 @@ blocks:
     alias: ''
     append: 'False'
     comment: ''
-    file: filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".cfile"
+    file: filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+".raw"
       if rec_button == 1 else "/dev/null"
     type: complex
-    unbuffered: 'False'
+    unbuffered: 'True'
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [920, 212.0]
+    coordinate: [912, 448.0]
     rotation: 0
     state: enabled
-- name: blocks_msgpair_to_var_0
-  id: blocks_msgpair_to_var
+- name: blocks_var_to_msg_0
+  id: blocks_var_to_msg
   parameters:
     affinity: ''
     alias: ''
     comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    msgname: freq
     target: freq
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [376, 564.0]
+    coordinate: [896.0, 104]
+    rotation: 270
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\nimport pmt\nimport time\nfrom datetime import datetime\n\
+      \nclass blk(gr.sync_block):  # other base classes are basic_block, decim_block,\
+      \ interp_block\n    \"\"\"Embedded Python Block example - a simple multiply\
+      \ const\"\"\"\n\n    def __init__(self):  # only default arguments here\n  \
+      \      \"\"\"arguments to this function show up as parameters in GRC\"\"\"\n\
+      \        gr.sync_block.__init__(\n            self,\n            name='Control\
+      \ logic',   # will show up in GRC\n            in_sig=None,\n            out_sig=None\n\
+      \        )\n        # if an attribute with the same name as a parameter is found,\n\
+      \        # a callback is registered (properties work, too).\n        \n    \
+      \    self.message_port_register_out(pmt.intern('msg_out'))\n        self.message_port_register_in(pmt.intern('msg_in'))\n\
+      \        self.set_msg_handler(pmt.intern('msg_in'), self.handle_msg)\n \n  \
+      \  def handle_msg(self, msg):\n        val =  pmt.to_python(msg)\n        print(val)\n\
+      \        if val=='FINISHED':\n            self.message_port_pub(pmt.intern(\"\
+      msg_out\"), pmt.cons(pmt.intern(\"value\"), pmt.from_bool(False)))\n       \
+      \ elif val=='IN PROGRESS':\n            pass\n        elif val=='RESET':\n \
+      \           pass\n        \n\n\n\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Control logic', 'blk', [], [('msg_in', 'message', 1)], [('msg_out',
+      'message', 1)], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [600, 432.0]
     rotation: 180
     state: enabled
 - name: fosphor_qt_sink_c_0
@@ -241,7 +310,7 @@ blocks:
   parameters:
     affinity: ''
     alias: ''
-    comment: ''
+    comment: If you have OpenCL Support on you plattform this Sink can ce used
     freq_center: freq
     freq_span: gui_samp_rate
     gui_hint: tabs@0:2,0,5,4
@@ -252,9 +321,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [704, 348.0]
+    coordinate: [864, 824.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: import_datetime
   id: import
   parameters:
@@ -265,7 +334,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [112, 260.0]
+    coordinate: [8, 232.0]
     rotation: 0
     state: enabled
 - name: import_os
@@ -278,7 +347,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 196.0]
+    coordinate: [8, 176.0]
     rotation: 0
     state: true
 - name: import_time
@@ -291,112 +360,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 260.0]
+    coordinate: [8, 120.0]
     rotation: 0
     state: enabled
-- name: qtgui_edit_box_msg_0_0
-  id: qtgui_edit_box_msg
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    gui_hint: tabs@0:1,0,1,1
-    is_pair: 'True'
-    is_static: 'True'
-    key: freq
-    label: Msg-based input
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: float
-    value: str_freq
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [704, 532.0]
-    rotation: 180
-    state: true
-- name: qtgui_freq_sink_x_0
-  id: qtgui_freq_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'False'
-    average: '1.0'
-    axislabels: 'True'
-    bw: gui_samp_rate
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    ctrlpanel: 'False'
-    fc: freq
-    fftsize: '8192'
-    freqhalf: 'True'
-    grid: 'False'
-    gui_hint: tabs@0:2,0,5,4
-    label: Relative Gain
-    label1: ''
-    label10: ''''''
-    label2: ''''''
-    label3: ''''''
-    label4: ''''''
-    label5: ''''''
-    label6: ''''''
-    label7: ''''''
-    label8: ''''''
-    label9: ''''''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '""'
-    nconnections: '1'
-    norm_window: 'False'
-    showports: 'True'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_tag: '""'
-    type: complex
-    units: dB
-    update_time: '0.05'
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    wintype: window.WIN_BLACKMAN_hARRIS
-    ymax: '10'
-    ymin: '-140'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [704, 424.0]
-    rotation: 0
-    state: disabled
 - name: qtgui_ledindicator_0
   id: qtgui_ledindicator
   parameters:
@@ -410,30 +376,42 @@ blocks:
     offColor: green
     onColor: red
     position: '2'
-    state: True if rec_button == 1 else False
+    state: 'False'
     verticalalignment: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 4.0]
+    coordinate: [896, 616.0]
     rotation: 0
     state: true
-- name: rf_bw
-  id: parameter
+- name: qtgui_sink_x_0
+  id: qtgui_sink_x
   parameters:
+    affinity: ''
     alias: ''
+    bw: gui_samp_rate
     comment: ''
-    hide: none
-    label: RF BANDWITDH
-    short_id: b
-    type: eng_float
-    value: 20e6
+    fc: freq
+    fftsize: '2048'
+    gui_hint: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '""'
+    plotconst: 'False'
+    plotfreq: 'True'
+    plottime: 'True'
+    plotwaterfall: 'True'
+    rate: '20'
+    showports: 'True'
+    showrf: 'True'
+    type: complex
+    wintype: window.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1544, 116.0]
+    coordinate: [864, 696.0]
     rotation: 0
     state: enabled
 - name: rf_freq
@@ -450,7 +428,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1304, 116.0]
+    coordinate: [752, 144.0]
     rotation: 0
     state: enabled
 - name: rf_gain
@@ -462,12 +440,12 @@ blocks:
     label: RF GAIN
     short_id: g
     type: eng_float
-    value: '40.0'
+    value: '70'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1440, 116.0]
+    coordinate: [376, 144.0]
     rotation: 0
     state: enabled
 - name: samp_rate
@@ -479,12 +457,12 @@ blocks:
     label: SAMPLE RATE
     short_id: s
     type: eng_float
-    value: 2e6
+    value: 4e6
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1680, 116.0]
+    coordinate: [592, 144.0]
     rotation: 0
     state: enabled
 - name: tabs
@@ -493,7 +471,7 @@ blocks:
     alias: ''
     comment: ''
     gui_hint: 0,0,7,4
-    label0: Tab 0
+    label0: RF Settings
     label1: Tab 1
     label10: Tab 10
     label11: Tab 11
@@ -518,7 +496,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 116.0]
+    coordinate: [248, 8.0]
     rotation: 0
     state: true
 - name: uhd_usrp_source_0
@@ -558,7 +536,7 @@ blocks:
     ant7: '"RX2"'
     ant8: '"RX2"'
     ant9: '"RX2"'
-    bw0: gui_bandwidth
+    bw0: gui_samp_rate
     bw1: '0'
     bw10: '0'
     bw11: '0'
@@ -954,40 +932,40 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [328, 172.0]
+    coordinate: [184, 420.0]
     rotation: 0
     state: enabled
-- name: zeromq_pub_sink_0
-  id: zeromq_pub_sink
+- name: wavetrap_head_w_rst_0
+  id: wavetrap_head_w_rst
   parameters:
-    address: tcp://127.0.0.1:5000
     affinity: ''
     alias: ''
     comment: ''
-    hwm: '-1'
-    key: ''
-    pass_tags: 'True'
-    timeout: '100'
+    dump_buff: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: samples
     type: complex
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [920, 308.0]
+    coordinate: [600, 472.0]
     rotation: 0
     state: enabled
 
 connections:
-- [fosphor_qt_sink_c_0, freq, qtgui_edit_box_msg_0_0, val]
-- [qtgui_edit_box_msg_0_0, msg, blocks_msgpair_to_var_0, inpair]
-- [qtgui_edit_box_msg_0_0, msg, uhd_usrp_source_0, command]
-- [qtgui_freq_sink_x_0, freq, qtgui_edit_box_msg_0_0, val]
-- [uhd_usrp_source_0, '0', blocks_file_sink_0, '0']
+- [blocks_var_to_msg_0, msgout, qtgui_sink_x_0, freq]
+- [epy_block_0, msg_out, rec_button, set_state]
+- [rec_button, state, qtgui_ledindicator_0, state]
+- [rec_button, state, wavetrap_head_w_rst_0, reset]
 - [uhd_usrp_source_0, '0', fosphor_qt_sink_c_0, '0']
-- [uhd_usrp_source_0, '0', qtgui_freq_sink_x_0, '0']
-- [uhd_usrp_source_0, '0', zeromq_pub_sink_0, '0']
+- [uhd_usrp_source_0, '0', qtgui_sink_x_0, '0']
+- [uhd_usrp_source_0, '0', wavetrap_head_w_rst_0, '0']
+- [wavetrap_head_w_rst_0, '0', blocks_file_sink_0, '0']
+- [wavetrap_head_w_rst_0, status, epy_block_0, msg_in]
 
 metadata:
   file_format: 1
-  grc_version: 3.10.2.0-rc1
+  grc_version: 3.10.11.0
