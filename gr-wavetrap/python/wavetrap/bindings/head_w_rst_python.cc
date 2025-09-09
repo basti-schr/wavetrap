@@ -46,14 +46,14 @@ void bind_head_w_rst(py::module& m)
         
         .def("reset",&head_w_rst::reset,       
             py::arg("dump_buff"),
-            ""
+            D(head_w_rst,reset)
         )
 
 
         
         .def("set_length",&head_w_rst::set_length,       
             py::arg("nitems"),
-            ""
+            D(head_w_rst,set_length)
         );
 
 

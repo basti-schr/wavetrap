@@ -25,9 +25,9 @@
  static const char *__doc_gr_wavetrap_head_w_rst_make = R"doc()doc";
 
  
- static const char __doc_gr_wavetrap_head_w_rst_set_length = R"doc()doc";
+ static const char *__doc_gr_wavetrap_head_w_rst_set_length = R"doc()doc";
 
 
- static const char __doc_gr_wavetrap_head_w_rst_reset = R"doc()doc";
+ static const char *__doc_gr_wavetrap_head_w_rst_reset = R"doc()doc";
 
   
