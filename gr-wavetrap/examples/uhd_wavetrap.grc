@@ -54,12 +54,12 @@ blocks:
   parameters:
     comment: "creates full path to IQ recording\nand adds timestamp and the \n'note'\
       \ variable to the filename"
-    value: rootdir+record_file_path+note+"_"+str(int(freq))+"Hz_"+str(int(gui_samp_rate))+"sps_"+str(gui_gain)+"dB_"
+    value: rootdir+record_file_path+note+"_"+str(int(freq))+"Hz_"+str(int(gui_samp_rate))+"sps_"
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1208, 656.0]
+    coordinate: [1304, 664.0]
     rotation: 0
     state: enabled
 - name: freq
@@ -165,8 +165,8 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [464, 624.0]
-    rotation: 0
+    coordinate: [528, 536.0]
+    rotation: 180
     state: enabled
 - name: record_file_path
   id: variable
@@ -177,7 +177,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1216, 560.0]
+    coordinate: [1304, 568.0]
     rotation: 0
     state: enabled
 - name: rootdir
@@ -191,9 +191,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1224, 456.0]
+    coordinate: [1304, 464.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: rootdir
   id: variable
   parameters:
@@ -203,7 +203,21 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1272, 432.0]
+    coordinate: [1472, 464.0]
+    rotation: 0
+    state: enabled
+- name: rootdir
+  id: variable
+  parameters:
+    comment: 'defaults to your temporary /tmp directory
+
+      used for testing'
+    value: '"/tmp/"'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1640, 464.0]
     rotation: 0
     state: disabled
 - name: samples
@@ -224,14 +238,60 @@ blocks:
     comment: 'gets system time and
 
       applies string formatting'
-    value: datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S')
+    value: datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1232, 344.0]
+    coordinate: [1304, 352.0]
     rotation: 0
     state: enabled
+- name: analog_sig_source_x_0
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '1'
+    comment: ''
+    freq: freq/4
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: gui_samp_rate
+    showports: 'False'
+    type: complex
+    waveform: analog.GR_CONST_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [160, 288.0]
+    rotation: 0
+    state: disabled
+- name: analog_sig_source_x_0_0
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '1'
+    comment: ''
+    freq: freq/4
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: gui_samp_rate
+    showports: 'False'
+    type: complex
+    waveform: analog.GR_CONST_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [160, 432.0]
+    rotation: 0
+    state: disabled
 - name: blocks_file_sink_0
   id: blocks_file_sink
   parameters:
@@ -281,9 +341,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1392, 168.0]
+    coordinate: [1224, 128.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_streams_to_vector_0
   id: blocks_streams_to_vector
   parameters:
@@ -299,7 +359,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [472, 400.0]
+    coordinate: [496, 400.0]
     rotation: 0
     state: enabled
 - name: blocks_var_to_msg_0
@@ -371,7 +431,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [488, 560.0]
+    coordinate: [768, 576.0]
     rotation: 180
     state: enabled
 - name: fosphor_qt_sink_c_0
@@ -451,7 +511,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [696, 648.0]
+    coordinate: [528, 656.0]
     rotation: 0
     state: true
 - name: qtgui_sink_x_0
@@ -526,7 +586,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1544, 116.0]
+    coordinate: [1224, 0.0]
     rotation: 0
     state: disabled
 - name: rf_freq
@@ -543,7 +603,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [752, 144.0]
+    coordinate: [760, 144.0]
     rotation: 0
     state: enabled
 - name: rf_gain
@@ -1047,7 +1107,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [176, 324.0]
+    coordinate: [160, 320.0]
     rotation: 0
     state: enabled
 - name: variable_qtgui_msg_push_button_0
@@ -1065,9 +1125,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1096, 144.0]
+    coordinate: [968, 104.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: wavetrap_head_w_rst_0
   id: wavetrap_head_w_rst
   parameters:
@@ -1087,35 +1147,20 @@ blocks:
     coordinate: [672, 416.0]
     rotation: 0
     state: enabled
-- name: wavetrap_head_w_rst_0_0
-  id: wavetrap_head_w_rst
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    dump_buff: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_items: samples
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [624, 560.0]
-    rotation: 0
-    state: disabled
 
 connections:
+- [analog_sig_source_x_0, '0', blocks_streams_to_vector_0, '0']
+- [analog_sig_source_x_0, '0', qtgui_sink_x_0, '0']
+- [analog_sig_source_x_0_0, '0', blocks_streams_to_vector_0, '1']
+- [analog_sig_source_x_0_0, '0', qtgui_sink_x_0_0, '0']
 - [blocks_streams_to_vector_0, '0', wavetrap_head_w_rst_0, '0']
 - [blocks_var_to_msg_0, msgout, qtgui_sink_x_0, freq]
+- [blocks_var_to_msg_0, msgout, qtgui_sink_x_0_0, freq]
 - [blocks_vector_to_streams_0, '0', blocks_file_sink_0, '0']
 - [blocks_vector_to_streams_0, '1', blocks_file_sink_0_0, '0']
 - [epy_block_0, msg_out, rec_button, set_state]
 - [rec_button, state, qtgui_ledindicator_0, state]
 - [rec_button, state, wavetrap_head_w_rst_0, reset]
-- [rec_button, state, wavetrap_head_w_rst_0_0, reset]
 - [uhd_usrp_source_0, '0', blocks_streams_to_vector_0, '0']
 - [uhd_usrp_source_0, '0', fosphor_qt_sink_c_0, '0']
 - [uhd_usrp_source_0, '0', qtgui_sink_x_0, '0']
@@ -1124,7 +1169,6 @@ connections:
 - [variable_qtgui_msg_push_button_0, pressed, blocks_msgpair_to_var_0, inpair]
 - [wavetrap_head_w_rst_0, '0', blocks_vector_to_streams_0, '0']
 - [wavetrap_head_w_rst_0, status, epy_block_0, msg_in]
-- [wavetrap_head_w_rst_0_0, '0', blocks_file_sink_0_0, '0']
 
 metadata:
   file_format: 1

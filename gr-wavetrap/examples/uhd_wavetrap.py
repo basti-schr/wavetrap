@@ -77,17 +77,17 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.rootdir = rootdir = "/home/sebastian/Software/gnssr-test/Gloshaugen/"
+        self.rootdir = rootdir = str(os.path.expanduser("~")+"/")
         self.record_file_path = record_file_path = "data/"
         self.note = note = 'RECORDING_NOTE'
         self.gui_samp_rate = gui_samp_rate = samp_rate
-        self.gui_gain = gui_gain = rf_gain
         self.freq = freq = 1575.42e6
         self.duration = duration = 1
-        self.timestamp = timestamp = datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S')
+        self.timestamp = timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
         self.samples = samples = int(duration * gui_samp_rate)
         self.rec_button = rec_button = 0
-        self.filename = filename = rootdir+record_file_path+note+"_"+str(int(freq))+"Hz_"+str(int(gui_samp_rate))+"sps_"+str(gui_gain)+"dB_"
+        self.gui_gain = gui_gain = rf_gain
+        self.filename = filename = rootdir+record_file_path+note+"_"+str(int(freq))+"Hz_"+str(int(gui_samp_rate))+"sps_"
 
         ##################################################
         # Blocks
@@ -142,10 +142,6 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         for c in range(2, 3):
             self.tabs_grid_layout_0.setColumnStretch(c, 1)
         self.wavetrap_head_w_rst_0 = wavetrap.head_w_rst(gr.sizeof_gr_complex*2, samples)
-        self.variable_qtgui_msg_push_button_0 = _variable_qtgui_msg_push_button_0_toggle_button = qtgui.MsgPushButton('Reset freq to L1', 'freq',1575.42e6,"default","default")
-        self.variable_qtgui_msg_push_button_0 = _variable_qtgui_msg_push_button_0_toggle_button
-
-        self.top_layout.addWidget(_variable_qtgui_msg_push_button_0_toggle_button)
         self.uhd_usrp_source_0 = uhd.usrp_source(
             ",".join(("", '')),
             uhd.stream_args(
@@ -246,7 +242,6 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         self.blocks_vector_to_streams_0 = blocks.vector_to_streams(gr.sizeof_gr_complex*1, 2)
         self.blocks_var_to_msg_0 = blocks.var_to_msg_pair('freq')
         self.blocks_streams_to_vector_0 = blocks.streams_to_vector(gr.sizeof_gr_complex*1, 2)
-        self.blocks_msgpair_to_var_0 = blocks.msg_pair_to_var(self.set_freq)
         self.blocks_file_sink_0_0 = blocks.file_sink(gr.sizeof_gr_complex*1, filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+"_RF1.raw" if rec_button == 1 else "/dev/null", False)
         self.blocks_file_sink_0_0.set_unbuffered(False)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+"_RF0.raw" if rec_button == 1 else "/dev/null", False)
@@ -257,10 +252,10 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         # Connections
         ##################################################
         self.msg_connect((self.blocks_var_to_msg_0, 'msgout'), (self.qtgui_sink_x_0, 'freq'))
+        self.msg_connect((self.blocks_var_to_msg_0, 'msgout'), (self.qtgui_sink_x_0_0, 'freq'))
         self.msg_connect((self.epy_block_0, 'msg_out'), (self.rec_button, 'set_state'))
         self.msg_connect((self.rec_button, 'state'), (self.qtgui_ledindicator_0, 'state'))
         self.msg_connect((self.rec_button, 'state'), (self.wavetrap_head_w_rst_0, 'reset'))
-        self.msg_connect((self.variable_qtgui_msg_push_button_0, 'pressed'), (self.blocks_msgpair_to_var_0, 'inpair'))
         self.msg_connect((self.wavetrap_head_w_rst_0, 'status'), (self.epy_block_0, 'msg_in'))
         self.connect((self.blocks_streams_to_vector_0, 0), (self.wavetrap_head_w_rst_0, 0))
         self.connect((self.blocks_vector_to_streams_0, 0), (self.blocks_file_sink_0, 0))
@@ -305,21 +300,21 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
 
     def set_rootdir(self, rootdir):
         self.rootdir = rootdir
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
+        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_")
 
     def get_record_file_path(self):
         return self.record_file_path
 
     def set_record_file_path(self, record_file_path):
         self.record_file_path = record_file_path
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
+        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_")
 
     def get_note(self):
         return self.note
 
     def set_note(self, note):
         self.note = note
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
+        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_")
         Qt.QMetaObject.invokeMethod(self._note_line_edit, "setText", Qt.Q_ARG("QString", str(self.note)))
 
     def get_gui_samp_rate(self):
@@ -327,7 +322,7 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
 
     def set_gui_samp_rate(self, gui_samp_rate):
         self.gui_samp_rate = gui_samp_rate
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
+        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_")
         self.set_samples(int(self.duration * self.gui_samp_rate))
         self.qtgui_sink_x_0.set_frequency_range(self.freq, self.gui_samp_rate)
         self.qtgui_sink_x_0_0.set_frequency_range(self.freq, self.gui_samp_rate)
@@ -335,21 +330,12 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         self.uhd_usrp_source_0.set_bandwidth(self.gui_samp_rate, 0)
         self.uhd_usrp_source_0.set_bandwidth(self.gui_samp_rate, 1)
 
-    def get_gui_gain(self):
-        return self.gui_gain
-
-    def set_gui_gain(self, gui_gain):
-        self.gui_gain = gui_gain
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
-        self.uhd_usrp_source_0.set_gain(self.gui_gain, 0)
-        self.uhd_usrp_source_0.set_gain(self.gui_gain, 1)
-
     def get_freq(self):
         return self.freq
 
     def set_freq(self, freq):
         self.freq = freq
-        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_"+str(self.gui_gain)+"dB_")
+        self.set_filename(self.rootdir+self.record_file_path+self.note+"_"+str(int(self.freq))+"Hz_"+str(int(self.gui_samp_rate))+"sps_")
         self.blocks_var_to_msg_0.variable_changed(self.freq)
         self.qtgui_sink_x_0.set_frequency_range(self.freq, self.gui_samp_rate)
         self.qtgui_sink_x_0_0.set_frequency_range(self.freq, self.gui_samp_rate)
@@ -383,6 +369,14 @@ class uhd_wavetrap(gr.top_block, Qt.QWidget):
         self.rec_button = rec_button
         self.blocks_file_sink_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+"_RF0.raw" if self.rec_button == 1 else "/dev/null")
         self.blocks_file_sink_0_0.open(self.filename+str(datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H:%M:%S'))+"_RF1.raw" if self.rec_button == 1 else "/dev/null")
+
+    def get_gui_gain(self):
+        return self.gui_gain
+
+    def set_gui_gain(self, gui_gain):
+        self.gui_gain = gui_gain
+        self.uhd_usrp_source_0.set_gain(self.gui_gain, 0)
+        self.uhd_usrp_source_0.set_gain(self.gui_gain, 1)
 
     def get_filename(self):
         return self.filename
